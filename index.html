@@ -4,137 +4,333 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-title" content="IFR ±45">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
 <title>IFR ±45 Trainer</title>
 <style>
   :root {
-    --bg: #0d1117;
-    --panel: #161b22;
-    --panel-2: #1f2630;
-    --line: #2d3540;
-    --text: #e6edf3;
-    --muted: #8b96a3;
-    --accent: #3fb6ff;
-    --good: #3fcf7a;
-    --bad: #ff5d5d;
-    --plus: #ffb347;
-    --minus: #b98cff;
-    --key: #202833;
-    --key-press: #2c3746;
+    --bg: #000;
+    --surface: #1c1c1e;
+    --surface-2: #2c2c2e;
+    --sheet-bg: #1c1c1e;
+    --row: #2c2c2e;
+    --fill: rgba(118,118,128,.24);
+    --pill: #636366;
+    --sep: rgba(84,84,88,.6);
+    --text: #fff;
+    --text-2: rgba(235,235,245,.6);
+    --text-3: rgba(235,235,245,.3);
+    --blue: #0a84ff;
+    --green: #30d158;
+    --red: #ff453a;
+    --orange: #ff9f0a;
+    --purple: #bf5af2;
+    --key: #2c2c2e;
+    --key-down: #48484a;
+    --scrim: rgba(0,0,0,.5);
+    --shadow: 0 1px 3px rgba(0,0,0,.4);
+    --rounded: ui-rounded, "SF Pro Rounded", -apple-system, system-ui, sans-serif;
+    --ease: cubic-bezier(.25,.85,.25,1);
+    color-scheme: dark;
   }
   @media (prefers-color-scheme: light) {
     :root:not([data-theme="dark"]) {
-      --bg: #f3f5f8; --panel: #ffffff; --panel-2: #eef1f5; --line: #d6dce4;
-      --text: #111821; --muted: #5d6875; --accent: #0a7fd1; --good: #148a45;
-      --bad: #d33131; --plus: #c76a00; --minus: #7a45d6; --key: #e7ebf0; --key-press: #d4dbe4;
+      --bg: #f2f2f7; --surface: #fff; --surface-2: #e5e5ea; --sheet-bg: #f2f2f7; --row: #fff;
+      --fill: rgba(118,118,128,.12); --pill: #fff; --sep: rgba(60,60,67,.29);
+      --text: #000; --text-2: rgba(60,60,67,.6); --text-3: rgba(60,60,67,.3);
+      --blue: #007aff; --green: #34c759; --red: #ff3b30; --orange: #ff9500; --purple: #af52de;
+      --key: #fff; --key-down: #d1d1d6; --scrim: rgba(0,0,0,.3);
+      --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 1px rgba(0,0,0,.04);
+      color-scheme: light;
     }
   }
+
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { margin: 0; height: 100%; }
+  html, body { margin: 0; min-height: 100%; }
   body {
     background: var(--bg); color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    font: 17px/1.35 -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
     display: flex; justify-content: center;
-    padding: max(12px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+    padding: max(10px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
     user-select: none; -webkit-user-select: none; touch-action: manipulation;
+    min-height: 100dvh;
   }
+  button { font: inherit; color: inherit; border: 0; background: none; padding: 0; cursor: pointer; }
+  button:focus-visible { outline: 3px solid color-mix(in srgb, var(--blue) 60%, transparent); outline-offset: 2px; }
+
   .app { width: 100%; max-width: 520px; display: flex; flex-direction: column; gap: 12px; }
-  header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-  h1 { font-size: 18px; margin: 0; letter-spacing: .02em; }
-  h1 span { color: var(--accent); }
-  .seg { display: flex; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 3px; }
+
+  /* ---------- header ---------- */
+  .top { display: flex; align-items: flex-end; justify-content: space-between; padding-top: 6px; }
+  h1 { font-size: 34px; line-height: 1.1; font-weight: 700; letter-spacing: -.022em; margin: 0; }
+  .mode-link {
+    display: inline-flex; align-items: center; gap: 4px; margin-top: 2px;
+    color: var(--blue); font-size: 15px; font-weight: 500; letter-spacing: -.01em;
+    transition: opacity .15s;
+  }
+  .mode-link:active { opacity: .45; transition: none; }
+  .mode-link svg { width: 7px; height: 12px; }
+  .round-btn {
+    width: 38px; height: 38px; border-radius: 50%; background: var(--fill); color: var(--blue);
+    display: grid; place-items: center; transition: transform .2s var(--ease), opacity .15s;
+  }
+  .round-btn:active { transform: scale(.9); opacity: .7; transition: none; }
+  .round-btn svg { width: 20px; height: 20px; }
+
+  /* ---------- segmented control ---------- */
+  .seg {
+    --n: 2; --i: 0;
+    position: relative; display: grid; grid-template-columns: repeat(var(--n), 1fr);
+    background: var(--fill); border-radius: 9px; padding: 2px; isolation: isolate;
+  }
+  .seg .pill {
+    position: absolute; z-index: -1; top: 2px; bottom: 2px; left: 2px;
+    width: calc((100% - 4px) / var(--n));
+    background: var(--pill); border-radius: 7px; box-shadow: var(--shadow), 0 0 0 .5px rgba(0,0,0,.04);
+    transform: translateX(calc(var(--i) * 100%));
+  }
+  .seg.ready .pill { transition: transform .38s cubic-bezier(.3,1.1,.4,1); }
   .seg button {
-    border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 14px; font-weight: 600;
-    padding: 7px 11px; border-radius: 7px; cursor: pointer;
+    height: 30px; font-size: 13px; font-weight: 500; letter-spacing: -.005em; color: var(--text);
+    border-radius: 7px; transition: opacity .2s; white-space: nowrap;
   }
-  .seg button.on { background: var(--panel-2); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.25); }
-  .controls { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .seg button.on { font-weight: 600; }
+  .seg button:not(.on):active { opacity: .5; transition: none; }
 
-  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 6px; text-align: center; }
-  .stat b { display: block; font-size: 20px; font-variant-numeric: tabular-nums; }
-  .stat small { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+  /* ---------- stats ---------- */
+  .stats {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    background: var(--surface); border-radius: 14px; padding: 10px 0;
+  }
+  .stat { text-align: center; position: relative; }
+  .stat + .stat::before { content: ""; position: absolute; left: 0; top: 6px; bottom: 6px; width: .5px; background: var(--sep); }
+  .stat b { display: block; font: 600 22px/1.15 var(--rounded); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+  .stat small { color: var(--text-2); font-size: 11px; font-weight: 500; letter-spacing: .02em; }
 
+  /* ---------- question card ---------- */
   .card {
-    background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
-    padding: 14px 16px 16px; display: flex; flex-direction: column; align-items: center; gap: 6px;
-    transition: border-color .15s, box-shadow .15s; position: relative;
+    position: relative; overflow: hidden;
+    background: var(--surface); border-radius: 22px;
+    padding: 16px 16px 14px; display: flex; flex-direction: column; align-items: center; gap: 8px;
+    box-shadow: 0 0 0 0 transparent; transition: box-shadow .25s var(--ease);
   }
-  .card.good { border-color: var(--good); box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 25%, transparent); }
-  .card.bad { border-color: var(--bad); box-shadow: 0 0 0 3px color-mix(in srgb, var(--bad) 25%, transparent); }
-  .timer { position: absolute; top: 12px; right: 14px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
-  .timer.hot { color: var(--bad); font-weight: 700; }
-
-  .rose { width: 150px; height: 150px; }
-  .q { display: flex; align-items: baseline; gap: 12px; font-variant-numeric: tabular-nums; }
-  .hdg { font-size: 64px; font-weight: 800; letter-spacing: .04em; line-height: 1; }
-  .op { font-size: 40px; font-weight: 800; line-height: 1; }
-  .op.plus { color: var(--plus); }
-  .op.minus { color: var(--minus); }
-  .hint { color: var(--muted); font-size: 13px; min-height: 18px; }
-
-  .answer {
-    display: flex; gap: 8px; margin-top: 4px;
+  .card.good { box-shadow: inset 0 0 0 2px var(--green); }
+  .card.bad { box-shadow: inset 0 0 0 2px var(--red); }
+  .progress { position: absolute; left: 0; top: 0; height: 3px; width: 100%; background: var(--blue); transform-origin: left; transform: scaleX(0); }
+  .progress.hot { background: var(--red); }
+  .timer {
+    position: absolute; top: 12px; right: 16px; font: 500 14px var(--rounded);
+    color: var(--text-2); font-variant-numeric: tabular-nums;
   }
+  .timer.hot { color: var(--red); font-weight: 700; }
+
+  .rose-wrap { display: grid; transition: grid-template-rows .35s var(--ease), opacity .25s; grid-template-rows: 1fr; }
+  .rose-wrap.off { grid-template-rows: 0fr; opacity: 0; }
+  .rose-wrap > div { overflow: hidden; display: flex; justify-content: center; }
+  .rose { width: 156px; height: 156px; display: block; }
+
+  .q { display: flex; align-items: baseline; gap: 12px; font-variant-numeric: tabular-nums; font-family: var(--rounded); }
+  .hdg { font-size: 68px; font-weight: 700; letter-spacing: -.02em; line-height: 1; }
+  .op { font-size: 42px; font-weight: 700; line-height: 1; letter-spacing: -.02em; }
+  .op.plus { color: var(--orange); }
+  .op.minus { color: var(--purple); }
+
+  .answer { display: flex; gap: 8px; margin-top: 6px; }
   .digit {
-    width: 56px; height: 64px; border-radius: 10px; background: var(--panel-2); border: 2px solid var(--line);
-    display: grid; place-items: center; font-size: 38px; font-weight: 800; font-variant-numeric: tabular-nums;
+    width: 58px; height: 66px; border-radius: 14px; background: var(--fill);
+    display: grid; place-items: center; font: 700 38px var(--rounded); font-variant-numeric: tabular-nums;
+    position: relative; transition: background-color .2s, color .2s;
   }
-  .digit.cur { border-color: var(--accent); }
-  .feedback { font-size: 15px; font-weight: 700; min-height: 20px; }
-  .feedback.good { color: var(--good); }
-  .feedback.bad { color: var(--bad); }
+  .digit.cur::after {
+    content: ""; position: absolute; bottom: 12px; left: 50%; width: 22px; height: 3px; margin-left: -11px;
+    border-radius: 2px; background: var(--blue); animation: blink 1s steps(1) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+  .digit.pop { animation: pop .18s var(--ease); }
+  @keyframes pop { from { transform: scale(.86); } to { transform: none; } }
+  .card.good .digit { background: color-mix(in srgb, var(--green) 18%, transparent); color: var(--green); }
+  .card.bad .digit { background: color-mix(in srgb, var(--red) 18%, transparent); color: var(--red); }
 
+  .feedback { font: 600 15px var(--rounded); min-height: 21px; letter-spacing: -.005em; font-variant-numeric: tabular-nums; }
+  .feedback.good { color: var(--green); }
+  .feedback.bad { color: var(--red); }
+
+  /* ---------- keypad ---------- */
   .pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
   .pad button {
-    height: 62px; border-radius: 12px; border: 1px solid var(--line); background: var(--key); color: var(--text);
-    font: inherit; font-size: 26px; font-weight: 700; cursor: pointer;
+    height: 60px; border-radius: 14px; background: var(--key); color: var(--text);
+    font: 500 28px var(--rounded); box-shadow: var(--shadow);
+    transition: transform .28s var(--ease), background-color .28s;
   }
-  .pad button:active { background: var(--key-press); transform: scale(.98); }
-  .pad .fn { font-size: 18px; color: var(--muted); }
-  .pad .go { background: var(--accent); color: #fff; border-color: transparent; font-size: 20px; }
+  .pad button.down { background: var(--key-down); transform: scale(.95); transition: none; }
+  .pad .fn { font-size: 22px; color: var(--text-2); background: var(--fill); box-shadow: none; }
+  .pad .go { background: var(--blue); color: #fff; font: 600 19px -apple-system, system-ui, sans-serif; box-shadow: none; }
+  .pad .go.down { background: var(--blue); filter: brightness(.85); }
+  .pad svg { width: 26px; height: 26px; vertical-align: middle; }
 
-  .footer { text-align: center; color: var(--muted); font-size: 12px; }
-  .footer button { background: none; border: 0; color: var(--accent); font: inherit; cursor: pointer; padding: 4px; }
+  .footnote { text-align: center; color: var(--text-2); font-size: 13px; line-height: 1.4; padding: 0 12px; }
 
-  .overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,.55); display: none; align-items: center; justify-content: center; padding: 16px;
+  /* ---------- sheet ---------- */
+  .scrim { position: fixed; inset: 0; background: var(--scrim); opacity: 0; pointer-events: none; z-index: 10; }
+  .sheet {
+    position: fixed; z-index: 11; left: 0; right: 0; bottom: 0; margin: 0 auto; max-width: 560px;
+    max-height: calc(100dvh - max(24px, env(safe-area-inset-top)) - 12px);
+    display: flex; flex-direction: column;
+    background: var(--sheet-bg); border-radius: 14px 14px 0 0;
+    box-shadow: 0 -8px 40px rgba(0,0,0,.25);
+    transform: translate3d(0,110%,0); visibility: hidden; will-change: transform;
   }
-  .overlay.show { display: flex; }
-  .sheet { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 22px; width: 100%; max-width: 360px; text-align: center; }
-  .sheet h2 { margin: 0 0 6px; font-size: 22px; }
-  .sheet .big { font-size: 54px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
-  .sheet p { color: var(--muted); margin: 6px 0 16px; }
-  .sheet button { width: 100%; height: 50px; border-radius: 12px; border: 0; background: var(--accent); color: #fff; font: inherit; font-size: 17px; font-weight: 700; cursor: pointer; }
+  .sheet-head { padding: 6px 16px 10px; touch-action: none; cursor: grab; flex: none; }
+  .grabber { width: 36px; height: 5px; border-radius: 3px; background: var(--text-3); margin: 0 auto 10px; }
+  .sheet-title { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; }
+  .sheet-title h2 { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: -.02em; grid-column: 2; }
+  .done { justify-self: end; color: var(--blue); font-weight: 600; font-size: 17px; padding: 6px 2px; transition: opacity .15s; }
+  .done:active { opacity: .4; transition: none; }
+  .sheet-body {
+    overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+    padding: 4px 16px max(24px, env(safe-area-inset-bottom));
+  }
+  .sec-h { font-size: 13px; color: var(--text-2); text-transform: uppercase; letter-spacing: .02em; margin: 18px 16px 7px; }
+  .sec-f { font-size: 13px; color: var(--text-2); margin: 7px 16px 0; line-height: 1.35; }
+  .group { background: var(--row); border-radius: 12px; overflow: hidden; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 8px 16px; position: relative; }
+  .row + .row::before, .reveal .row::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; height: .5px; background: var(--sep); }
+  .row.block { display: block; }
+  .row .seg { flex: 0 1 200px; }
+  .row label { font-size: 17px; letter-spacing: -.02em; }
 
-  @media (max-height: 700px) {
-    .rose { width: 110px; height: 110px; }
-    .hdg { font-size: 52px; }
+  .reveal { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows .34s var(--ease), opacity .22s; }
+  .reveal.open { grid-template-rows: 1fr; opacity: 1; }
+  .reveal > div { overflow: hidden; min-height: 0; }
+
+  .stepper { display: flex; align-items: center; gap: 4px; }
+  .stepper button {
+    width: 44px; height: 32px; border-radius: 8px; background: var(--fill); color: var(--text);
+    font-size: 22px; font-weight: 500; line-height: 1; display: grid; place-items: center;
+    transition: transform .25s var(--ease), opacity .2s;
+  }
+  .stepper button.down { transform: scale(.92); opacity: .6; transition: none; }
+  .stepper output { min-width: 58px; text-align: center; font: 600 22px var(--rounded); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 2px 0 4px; }
+  .chip {
+    height: 32px; padding: 0 14px; border-radius: 16px; background: var(--fill);
+    font: 600 15px var(--rounded); font-variant-numeric: tabular-nums;
+    transition: background-color .2s, color .2s, transform .25s var(--ease);
+  }
+  .chip.on { background: var(--blue); color: #fff; }
+  .chip.down { transform: scale(.92); transition: none; }
+
+  .switch { position: relative; width: 51px; height: 31px; flex: none; }
+  .switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; z-index: 1; }
+  .switch span { position: absolute; inset: 0; border-radius: 16px; background: var(--fill); transition: background-color .25s; }
+  .switch span::after {
+    content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff;
+    box-shadow: 0 3px 8px rgba(0,0,0,.15), 0 1px 1px rgba(0,0,0,.16); transition: transform .3s cubic-bezier(.3,1.25,.5,1), width .2s;
+  }
+  .switch input:checked + span { background: var(--green); }
+  .switch input:checked + span::after { transform: translateX(20px); }
+  .switch input:active + span::after { width: 33px; }
+  .switch input:checked:active + span::after { transform: translateX(14px); }
+  .switch input:focus-visible + span { outline: 3px solid color-mix(in srgb, var(--blue) 60%, transparent); outline-offset: 2px; }
+
+  .destructive { width: 100%; text-align: center; color: var(--red); font-size: 17px; min-height: 48px; transition: background-color .2s; }
+  .destructive:active { background: var(--fill); transition: none; }
+
+  /* ---------- result ---------- */
+  .result {
+    position: fixed; inset: 0; z-index: 20; display: none; align-items: center; justify-content: center; padding: 24px;
+    background: var(--scrim); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  }
+  .result.show { display: flex; }
+  .result-card {
+    width: 100%; max-width: 320px; background: var(--surface); border-radius: 22px; padding: 26px 20px 20px; text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,.35);
+  }
+  .result-card .eyebrow { font-size: 13px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: .04em; }
+  .result-card .big { font: 700 72px/1 var(--rounded); letter-spacing: -.03em; margin: 8px 0 4px; font-variant-numeric: tabular-nums; }
+  .result-card .unit { font-size: 15px; color: var(--text-2); }
+  .result-card .meta { display: grid; grid-template-columns: repeat(3, 1fr); margin: 18px 0; background: var(--fill); border-radius: 12px; padding: 10px 0; }
+  .result-card .meta b { display: block; font: 600 18px var(--rounded); font-variant-numeric: tabular-nums; }
+  .result-card .meta small { font-size: 11px; color: var(--text-2); }
+  .result-card .best { color: var(--orange); font-weight: 600; font-size: 15px; min-height: 20px; margin-bottom: 12px; }
+  .btn-primary {
+    width: 100%; height: 50px; border-radius: 14px; background: var(--blue); color: #fff; font-size: 17px; font-weight: 600;
+    transition: transform .25s var(--ease), filter .2s;
+  }
+  .btn-primary:active { transform: scale(.97); filter: brightness(.88); transition: none; }
+
+  @media (max-height: 940px) {
+    .footnote { display: none; }
+    .rose { width: 132px; height: 132px; }
+    .hdg { font-size: 58px; } .op { font-size: 38px; }
+    .digit { height: 58px; width: 54px; font-size: 34px; }
     .pad button { height: 54px; }
+    .card { padding-top: 12px; gap: 6px; }
+    .stats { padding: 8px 0; }
+  }
+  @media (max-height: 760px) {
+    .rose { width: 96px; height: 96px; }
+    .hdg { font-size: 50px; } .op { font-size: 32px; }
+    .digit { height: 50px; width: 48px; font-size: 30px; }
+    .pad button { height: 46px; font-size: 24px; }
+    .app { gap: 8px; }
+    h1 { font-size: 28px; }
+    .stat b { font-size: 19px; }
+  }
+
+  @media (max-height: 690px) {
+    .rose { width: 84px; height: 84px; }
+    .pad button { height: 44px; }
+    .top { padding-top: 0; }
+    h1 { font-size: 26px; }
+  }
+  @media (min-width: 700px) and (min-height: 1000px) {
+    .app { max-width: 600px; gap: 14px; }
+    h1 { font-size: 40px; }
+    .seg button { height: 34px; font-size: 15px; }
+    .stats { padding: 14px 0; }
+    .stat b { font-size: 28px; } .stat small { font-size: 13px; }
+    .card { padding: 22px 20px 18px; gap: 10px; border-radius: 26px; }
+    .rose { width: 190px; height: 190px; }
+    .hdg { font-size: 88px; } .op { font-size: 54px; }
+    .digit { width: 72px; height: 82px; font-size: 48px; border-radius: 16px; }
+    .feedback { font-size: 18px; min-height: 24px; }
+    .pad { gap: 10px; }
+    .pad button { height: 70px; font-size: 32px; border-radius: 18px; }
+    .pad .go { font-size: 22px; }
+    .footnote { display: block; font-size: 14px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: .01ms !important; animation: none !important; }
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .result { -webkit-backdrop-filter: none; backdrop-filter: none; }
   }
 </style>
 </head>
 <body>
 <div class="app">
-  <header>
-    <h1>IFR <span>±45</span> Trainer</h1>
-    <div class="seg" id="runMode">
-      <button data-v="free" class="on">Free</button>
-      <button data-v="sprint">60 s sprint</button>
+  <header class="top">
+    <div>
+      <h1>IFR <span id="titleOff">±45</span></h1>
+      <button class="mode-link" id="modeLink">
+        <span id="modeText">45° · Mixed</span>
+        <svg viewBox="0 0 7 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l5 5-5 5"/></svg>
+      </button>
     </div>
+    <button class="round-btn" id="openSettings" aria-label="Settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg>
+    </button>
   </header>
 
-  <div class="controls">
-    <div class="seg" id="opMode">
-      <button data-v="mix" class="on">Mixed</button>
-      <button data-v="plus">+45</button>
-      <button data-v="minus">−45</button>
-    </div>
-    <div class="seg" id="roseMode">
-      <button data-v="on" class="on">Compass</button>
-      <button data-v="off">Numbers only</button>
-    </div>
+  <div class="seg" id="runMode">
+    <span class="pill"></span>
+    <button data-v="free">Free practice</button>
+    <button data-v="sprint">60 s sprint</button>
   </div>
 
   <div class="stats">
@@ -145,13 +341,16 @@
   </div>
 
   <div class="card" id="card">
+    <div class="progress" id="progress"></div>
     <div class="timer" id="timer"></div>
-    <svg class="rose" id="rose" viewBox="-100 -100 200 200" aria-hidden="true">
-      <g id="roseCard"></g>
-      <g id="bugs"></g>
-      <path d="M0,-98 L-7,-84 L7,-84 Z" fill="var(--accent)"/>
-      <path d="M0,-12 L0,40 M-22,8 L22,8 M-9,32 L9,32" stroke="var(--text)" stroke-width="4" stroke-linecap="round" fill="none"/>
-    </svg>
+    <div class="rose-wrap" id="roseWrap"><div>
+      <svg class="rose" id="rose" viewBox="-100 -100 200 200" aria-hidden="true">
+        <g id="roseCard"></g>
+        <g id="bugs"></g>
+        <path d="M0,-98 L-6.5,-86 L6.5,-86 Z" fill="var(--blue)"/>
+        <path d="M0,-14 L0,38 M-22,6 L22,6 M-9,30 L9,30" stroke="var(--text)" stroke-width="4" stroke-linecap="round" fill="none"/>
+      </svg>
+    </div></div>
     <div class="q">
       <div class="hdg" id="hdg">---</div>
       <div class="op" id="op">+45</div>
@@ -168,21 +367,119 @@
     <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
     <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
     <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
-    <button data-k="del" class="fn">⌫</button><button data-k="0">0</button><button data-k="ok" class="go">Enter</button>
+    <button data-k="del" class="fn" aria-label="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M9 5h11a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H9l-6-7z"/><path d="M12 9.5l5 5M17 9.5l-5 5"/></svg></button>
+    <button data-k="0">0</button>
+    <button data-k="ok" class="go">Enter</button>
   </div>
 
-  <div class="footer">
-    Type 3 digits (e.g. 045) — it checks automatically. 000 and 360 both count as north.
-    <br><button id="reset">Reset stats</button>
+  <p class="footnote">Type three digits — it checks automatically. 000 and 360 both count as north. Keep typing after a miss to skip ahead.</p>
+</div>
+
+<!-- settings sheet -->
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <div class="sheet-head" id="sheetHead">
+    <div class="grabber"></div>
+    <div class="sheet-title">
+      <h2 id="sheetTitle">Practice settings</h2>
+      <button class="done" id="closeSettings">Done</button>
+    </div>
+  </div>
+  <div class="sheet-body">
+    <div class="sec-h">Offset</div>
+    <div class="group">
+      <div class="row block">
+        <div class="seg" id="offMode">
+          <span class="pill"></span>
+          <button data-v="45">±45</button>
+          <button data-v="custom">Custom</button>
+          <button data-v="random">Random</button>
+        </div>
+      </div>
+      <div class="reveal" id="customPanel"><div>
+        <div class="row">
+          <label>Degrees</label>
+          <div class="stepper">
+            <button id="minusBtn" aria-label="Decrease">−</button>
+            <output id="customVal">33</output>
+            <button id="plusBtn" aria-label="Increase">+</button>
+          </div>
+        </div>
+        <div class="row block">
+          <div class="chips" id="chips">
+            <button class="chip" data-v="10">10</button>
+            <button class="chip" data-v="20">20</button>
+            <button class="chip" data-v="30">30</button>
+            <button class="chip" data-v="33">33</button>
+            <button class="chip" data-v="45">45</button>
+            <button class="chip" data-v="60">60</button>
+            <button class="chip" data-v="90">90</button>
+            <button class="chip" data-v="120">120</button>
+          </div>
+        </div>
+      </div></div>
+      <div class="reveal" id="randomPanel"><div>
+        <div class="row">
+          <label>Up to</label>
+          <div class="seg" id="rndMax">
+            <span class="pill"></span>
+            <button data-v="90">90°</button>
+            <button data-v="180">180°</button>
+          </div>
+        </div>
+        <div class="row">
+          <label>Steps</label>
+          <div class="seg" id="rndStep">
+            <span class="pill"></span>
+            <button data-v="1">Any</button>
+            <button data-v="5">5°</button>
+            <button data-v="10">10°</button>
+          </div>
+        </div>
+      </div></div>
+    </div>
+    <p class="sec-f" id="offFoot">The classic: add or subtract 45°.</p>
+
+    <div class="sec-h">Direction</div>
+    <div class="group">
+      <div class="row block">
+        <div class="seg" id="opMode">
+          <span class="pill"></span>
+          <button data-v="mix">Mixed</button>
+          <button data-v="plus">Add</button>
+          <button data-v="minus">Subtract</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec-h">Display</div>
+    <div class="group">
+      <div class="row">
+        <label for="roseToggle">Compass rose</label>
+        <div class="switch"><input type="checkbox" id="roseToggle" role="switch"><span></span></div>
+      </div>
+    </div>
+    <p class="sec-f">The rose turns to the heading, and shows the target bug after you answer.</p>
+
+    <div class="group" style="margin-top:24px">
+      <button class="destructive" id="reset">Reset stats</button>
+    </div>
   </div>
 </div>
 
-<div class="overlay" id="overlay">
-  <div class="sheet">
-    <h2>Time!</h2>
+<!-- sprint result -->
+<div class="result" id="result">
+  <div class="result-card" id="resultCard">
+    <div class="eyebrow" id="ovMode">Sprint · 45°</div>
     <div class="big" id="ovScore">0</div>
-    <p id="ovDetail"></p>
-    <button id="ovAgain">Go again</button>
+    <div class="unit">correct in 60 seconds</div>
+    <div class="meta">
+      <div><b id="ovAcc">–</b><small>Accuracy</small></div>
+      <div><b id="ovAvg">–</b><small>Avg time</small></div>
+      <div><b id="ovBest">–</b><small>Best</small></div>
+    </div>
+    <div class="best" id="ovBestNote"></div>
+    <button class="btn-primary" id="ovAgain">Go again</button>
   </div>
 </div>
 
@@ -190,76 +487,141 @@
 (() => {
   const $ = id => document.getElementById(id);
   const SPRINT_SECONDS = 60;
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+
+  // ---------- persisted settings ----------
+  const settings = { runMode: 'free', offMode: '45', custom: 33, rndMax: 180, rndStep: 1, opMode: 'mix', showRose: true };
+  try { Object.assign(settings, JSON.parse(localStorage.getItem('ifr45-settings') || '{}')); } catch (e) {}
+  const save = () => { try { localStorage.setItem('ifr45-settings', JSON.stringify(settings)); } catch (e) {} };
 
   const state = {
-    opMode: 'mix', runMode: 'free', showRose: true,
-    hdg: 0, op: 1, ans: 0, input: '', t0: 0, locked: false,
+    hdg: 0, op: 1, off: 45, ans: 0, input: '', t0: 0, locked: false,
     correct: 0, wrong: 0, streak: 0, totalTime: 0,
-    sprintEnd: 0, sprintTimer: null, best: 0,
+    sprintEnd: 0, sprintRaf: 0, sprinting: false, pending: 0,
   };
-  try { state.best = Number(localStorage.getItem('ifr45-best')) || 0; } catch (e) {}
 
   const norm = x => { x = ((x % 360) + 360) % 360; return x === 0 ? 360 : x; };
   const fmt = n => String(n).padStart(3, '0');
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+  // ---------- tiny spring (damping ratio + response, Apple-style) ----------
+  // Starts from the current value and velocity, so it can be interrupted and retargeted any time.
+  function spring({ from, to, velocity = 0, damping = 1, response = 0.35, eps = 0.1, onUpdate, onDone }) {
+    const k = Math.pow(2 * Math.PI / response, 2);
+    const c = 4 * Math.PI * damping / response;
+    let x = from, v = velocity, last = performance.now(), id = 0, alive = true;
+    if (reduceMotion.matches) { onUpdate(to); onDone && onDone(); return { stop() {}, get value() { return to; }, get velocity() { return 0; } }; }
+    const step = now => {
+      const dt = Math.min(0.064, (now - last) / 1000); last = now;
+      const n = Math.max(1, Math.ceil(dt / 0.004)), h = dt / n;
+      for (let i = 0; i < n; i++) { const a = -k * (x - to) - c * v; v += a * h; x += v * h; }
+      if (Math.abs(x - to) < eps && Math.abs(v) < eps * 10) { x = to; v = 0; onUpdate(to); alive = false; onDone && onDone(); return; }
+      onUpdate(x);
+      id = requestAnimationFrame(step);
+    };
+    id = requestAnimationFrame(step);
+    return { stop() { if (alive) cancelAnimationFrame(id); alive = false; }, get value() { return x; }, get velocity() { return alive ? v : 0; } };
+  }
+  const animate = (el, frames, opts) => { if (!reduceMotion.matches && el.animate) el.animate(frames, opts); };
 
   // ---------- compass rose ----------
-  const card = $('roseCard');
+  const roseCard = $('roseCard');
   const ns = 'http://www.w3.org/2000/svg';
-  const el = (tag, attrs) => { const e = document.createElementNS(ns, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
-  card.appendChild(el('circle', { r: 82, fill: 'var(--panel-2)', stroke: 'var(--line)', 'stroke-width': 2 }));
+  const mk = (tag, attrs) => { const e = document.createElementNS(ns, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+  roseCard.appendChild(mk('circle', { r: 84, fill: 'var(--fill)' }));
   for (let d = 0; d < 360; d += 5) {
     const long = d % 30 === 0, mid = d % 10 === 0;
-    const r1 = 82, r2 = long ? 70 : mid ? 74 : 78;
-    const a = d * Math.PI / 180;
-    card.appendChild(el('line', {
+    const r1 = 82, r2 = long ? 70 : mid ? 74 : 78, a = d * Math.PI / 180;
+    roseCard.appendChild(mk('line', {
       x1: r1 * Math.sin(a), y1: -r1 * Math.cos(a), x2: r2 * Math.sin(a), y2: -r2 * Math.cos(a),
-      stroke: 'var(--muted)', 'stroke-width': long ? 2.4 : 1.2,
+      stroke: long ? 'var(--text)' : 'var(--text-2)', 'stroke-width': long ? 2.2 : 1.1, 'stroke-linecap': 'round',
     }));
     if (long) {
       const lbl = { 0: 'N', 90: 'E', 180: 'S', 270: 'W' }[d] || String(d / 10);
-      const t = el('text', {
-        x: 0, y: -58, 'text-anchor': 'middle', 'dominant-baseline': 'middle',
-        'font-size': lbl.length > 1 || 'NESW'.includes(lbl) ? 13 : 12, 'font-weight': 700,
-        fill: 'NESW'.includes(lbl) ? 'var(--accent)' : 'var(--text)', transform: `rotate(${d})`,
+      const cardinal = 'NESW'.includes(lbl);
+      const t = mk('text', {
+        x: 0, y: -57, 'text-anchor': 'middle', 'dominant-baseline': 'central',
+        'font-size': cardinal ? 15 : 12, 'font-weight': cardinal ? 700 : 600,
+        'font-family': '-apple-system, system-ui, sans-serif',
+        fill: cardinal ? 'var(--blue)' : 'var(--text)', transform: `rotate(${d})`,
       });
       t.textContent = lbl;
-      card.appendChild(t);
+      roseCard.appendChild(t);
     }
   }
-  function bugAt(rel, color) {
-    // rel = degrees relative to lubber line (top)
-    const g = el('g', { transform: `rotate(${rel})` });
-    g.appendChild(el('path', { d: 'M-7,-84 L7,-84 L7,-74 L0,-79 L-7,-74 Z', fill: color }));
-    return g;
+  let roseAngle = 0, roseAnim = null;
+  const setRose = a => { roseAngle = a; roseCard.setAttribute('transform', `rotate(${-a})`); };
+  function turnRose(target) {
+    const delta = ((target - roseAngle) % 360 + 540) % 360 - 180;
+    const v = roseAnim ? roseAnim.velocity : 0;
+    if (roseAnim) roseAnim.stop();
+    if (!settings.showRose) { setRose(roseAngle + delta); return; }
+    roseAnim = spring({ from: roseAngle, to: roseAngle + delta, velocity: v, damping: 0.9, response: 0.5, eps: 0.05, onUpdate: setRose });
   }
-  function drawRose(showBug) {
-    card.setAttribute('transform', `rotate(${-state.hdg})`);
+  function showBug() {
     const bugs = $('bugs'); bugs.innerHTML = '';
-    if (showBug) bugs.appendChild(bugAt(state.op * 45, state.op > 0 ? 'var(--plus)' : 'var(--minus)'));
+    const g = mk('g', { transform: `rotate(${state.op * state.off})` });
+    g.appendChild(mk('path', { d: 'M-7,-84 L7,-84 L7,-73 L0,-78.5 L-7,-73 Z', fill: state.op > 0 ? 'var(--orange)' : 'var(--purple)' }));
+    bugs.appendChild(g);
+    animate(g, [{ opacity: 0 }, { opacity: 1 }], { duration: 160 });
+  }
+
+  // ---------- offsets ----------
+  function pickOffset() {
+    if (settings.offMode === 'custom') return settings.custom;
+    if (settings.offMode === 'random') {
+      const s = settings.rndStep, n = Math.floor(settings.rndMax / s);
+      return s * (1 + Math.floor(Math.random() * n));
+    }
+    return 45;
+  }
+  const opLabel = { mix: 'Mixed', plus: 'Add only', minus: 'Subtract only' };
+  function offsetLabel() {
+    if (settings.offMode === 'custom') return `${settings.custom}°`;
+    if (settings.offMode === 'random') return `Random ${settings.rndStep === 1 ? '1' : settings.rndStep}–${settings.rndMax}°${settings.rndStep > 1 ? ` by ${settings.rndStep}` : ''}`;
+    return '45°';
+  }
+  function renderModeText() {
+    $('modeText').textContent = `${offsetLabel()} · ${opLabel[settings.opMode]}`;
+    $('offFoot').textContent = settings.offMode === 'custom'
+      ? `Every question uses ${settings.custom}°.`
+      : settings.offMode === 'random'
+        ? 'A different offset every question — e.g. 135 + 33.'
+        : 'The classic: add or subtract 45°.';
   }
 
   // ---------- question flow ----------
   function next() {
-    state.hdg = 1 + Math.floor(Math.random() * 360);
-    state.op = state.opMode === 'plus' ? 1 : state.opMode === 'minus' ? -1 : (Math.random() < .5 ? 1 : -1);
-    state.ans = norm(state.hdg + state.op * 45);
+    clearTimeout(state.pending); state.pending = 0;
+    let h;
+    do { h = 1 + Math.floor(Math.random() * 360); } while (h === state.hdg);
+    state.hdg = h;
+    state.off = pickOffset();
+    state.op = settings.opMode === 'plus' ? 1 : settings.opMode === 'minus' ? -1 : (Math.random() < .5 ? 1 : -1);
+    state.ans = norm(state.hdg + state.op * state.off);
     state.input = ''; state.locked = false;
+
     $('hdg').textContent = fmt(state.hdg);
     const op = $('op');
-    op.textContent = state.op > 0 ? '+45' : '−45';
+    op.textContent = (state.op > 0 ? '+' : '−') + state.off;
     op.className = 'op ' + (state.op > 0 ? 'plus' : 'minus');
     $('card').className = 'card';
     $('fb').textContent = ''; $('fb').className = 'feedback';
-    drawRose(false);
+    $('bugs').innerHTML = '';
+    turnRose(state.hdg);
+    const enter = [{ opacity: 0, transform: 'translateY(10px) scale(.97)' }, { opacity: 1, transform: 'none' }];
+    animate($('hdg'), enter, { duration: 260, easing: 'cubic-bezier(.2,.9,.25,1)' });
+    animate(op, enter, { duration: 260, delay: 30, easing: 'cubic-bezier(.2,.9,.25,1)', fill: 'backwards' });
     renderInput();
     state.t0 = performance.now();
   }
 
-  function renderInput() {
+  function renderInput(popIndex = -1) {
     for (let i = 0; i < 3; i++) {
       const d = $('d' + i);
       d.textContent = state.input[i] || '';
       d.classList.toggle('cur', i === state.input.length && !state.locked);
+      if (i === popIndex) { d.classList.remove('pop'); void d.offsetWidth; d.classList.add('pop'); }
     }
   }
 
@@ -269,32 +631,43 @@
     const ok = v === state.ans || (state.ans === 360 && v === 0);
     const dt = (performance.now() - state.t0) / 1000;
     state.locked = true;
-    drawRose(true);
-    const fb = $('fb');
+    renderInput();
+    showBug();
+    const fb = $('fb'), card = $('card');
     if (ok) {
       state.correct++; state.streak++; state.totalTime += dt;
-      $('card').className = 'card good';
+      card.className = 'card good';
       fb.className = 'feedback good';
-      fb.textContent = `✓ ${dt.toFixed(1)} s`;
-      setTimeout(next, 450);
+      fb.textContent = `✓  ${dt.toFixed(1)} s`;
+      animate($('d0').parentNode, [{ transform: 'scale(1)' }, { transform: 'scale(1.05)' }, { transform: 'scale(1)' }], { duration: 260, easing: 'cubic-bezier(.3,1.4,.5,1)' });
+      state.pending = setTimeout(next, 380);
     } else {
       state.wrong++; state.streak = 0;
-      $('card').className = 'card bad';
+      card.className = 'card bad';
       fb.className = 'feedback bad';
-      fb.textContent = `✗ ${fmt(state.hdg)} ${state.op > 0 ? '+' : '−'} 45 = ${fmt(state.ans)}`;
-      setTimeout(next, 1600);
+      fb.textContent = `${fmt(state.hdg)} ${state.op > 0 ? '+' : '−'} ${state.off} = ${fmt(state.ans)}`;
+      animate($('d0').parentNode, [
+        { transform: 'translateX(0)' }, { transform: 'translateX(-10px)' }, { transform: 'translateX(8px)' },
+        { transform: 'translateX(-5px)' }, { transform: 'translateX(3px)' }, { transform: 'translateX(0)' },
+      ], { duration: 380, easing: 'ease-out' });
+      state.pending = setTimeout(next, 1700);
     }
     renderStats();
   }
 
   function press(k) {
-    if (state.runMode === 'sprint' && !state.sprintTimer) startSprint();
-    if (state.locked) return;
+    if (sheetOpen || $('result').classList.contains('show')) return;
+    if (settings.runMode === 'sprint' && !state.sprinting) startSprint();
+    if (state.locked) {
+      if (!state.pending) return;            // sprint over
+      next();                                // skip the pause — keep flowing
+      if (k === 'ok' || k === 'del') return;
+    }
     if (k === 'del') { state.input = state.input.slice(0, -1); renderInput(); return; }
     if (k === 'ok') { submit(); return; }
     if (state.input.length >= 3) return;
     state.input += k;
-    renderInput();
+    renderInput(state.input.length - 1);
     if (state.input.length === 3) submit();
   }
 
@@ -305,78 +678,248 @@
     $('sAcc').textContent = total ? Math.round(100 * state.correct / total) + '%' : '–';
     $('sAvg').textContent = state.correct ? (state.totalTime / state.correct).toFixed(1) + 's' : '–';
   }
-
   function resetStats() {
     Object.assign(state, { correct: 0, wrong: 0, streak: 0, totalTime: 0 });
     renderStats();
   }
 
   // ---------- sprint ----------
+  const bestKey = () => {
+    const off = settings.offMode === 'custom' ? 'c' + settings.custom : settings.offMode === 'random' ? `r${settings.rndMax}s${settings.rndStep}` : '45';
+    return off === '45' && settings.opMode === 'mix' ? 'ifr45-best' : `ifr45-best:${off}:${settings.opMode}`;
+  };
+  const getBest = () => { try { return Number(localStorage.getItem(bestKey())) || 0; } catch (e) { return 0; } };
+
   function startSprint() {
     resetStats();
+    state.sprinting = true;
     state.sprintEnd = performance.now() + SPRINT_SECONDS * 1000;
     state.t0 = performance.now();
-    state.sprintTimer = setInterval(tick, 100);
-    tick();
+    $('progress').style.opacity = '1';
+    const loop = () => { if (!state.sprinting) return; tick(); state.sprintRaf = requestAnimationFrame(loop); };
+    loop();
   }
-  function stopSprint() { clearInterval(state.sprintTimer); state.sprintTimer = null; }
+  function stopSprint() { state.sprinting = false; cancelAnimationFrame(state.sprintRaf); }
   function tick() {
     const left = Math.max(0, (state.sprintEnd - performance.now()) / 1000);
-    const t = $('timer');
-    t.textContent = left.toFixed(left < 10 ? 1 : 0) + ' s';
+    const t = $('timer'), p = $('progress');
+    t.textContent = left < 10 ? left.toFixed(1) + ' s' : Math.ceil(left) + ' s';
     t.classList.toggle('hot', left < 10);
+    p.style.transform = `scaleX(${left / SPRINT_SECONDS})`;
+    p.classList.toggle('hot', left < 10);
     if (left <= 0) endSprint();
   }
   function endSprint() {
     stopSprint();
-    state.locked = true;
+    clearTimeout(state.pending); state.pending = 0;
+    state.locked = true; renderInput();
     const total = state.correct + state.wrong;
-    const isBest = state.correct > state.best;
-    if (isBest) { state.best = state.correct; try { localStorage.setItem('ifr45-best', state.best); } catch (e) {} }
+    const prev = getBest(), isBest = state.correct > prev && state.correct > 0;
+    if (isBest) { try { localStorage.setItem(bestKey(), state.correct); } catch (e) {} }
+    $('ovMode').textContent = `Sprint · ${offsetLabel()}`;
     $('ovScore').textContent = state.correct;
-    $('ovDetail').textContent =
-      `${total ? Math.round(100 * state.correct / total) : 0}% accuracy · ` +
-      `${state.correct ? (state.totalTime / state.correct).toFixed(1) : '–'} s avg · ` +
-      (isBest ? 'new best!' : `best ${state.best}`);
-    $('overlay').classList.add('show');
+    $('ovAcc').textContent = total ? Math.round(100 * state.correct / total) + '%' : '–';
+    $('ovAvg').textContent = state.correct ? (state.totalTime / state.correct).toFixed(1) + 's' : '–';
+    $('ovBest').textContent = Math.max(prev, state.correct) || '–';
+    $('ovBestNote').textContent = isBest ? (prev ? `New best — up from ${prev}` : 'First score on the board') : '';
+    $('result').classList.add('show');
+    animate($('result'), [{ opacity: 0 }, { opacity: 1 }], { duration: 200 });
+    animate($('resultCard'), [{ opacity: 0, transform: 'scale(.9)' }, { opacity: 1, transform: 'none' }], { duration: 380, easing: 'cubic-bezier(.3,1.25,.5,1)' });
   }
   function setIdleTimer() {
-    const t = $('timer');
-    t.classList.remove('hot');
-    t.textContent = state.runMode === 'sprint' ? `${SPRINT_SECONDS} s · type to start` : '';
+    const t = $('timer'), p = $('progress');
+    t.classList.remove('hot'); p.classList.remove('hot');
+    if (settings.runMode === 'sprint') {
+      t.textContent = 'Type to start';
+      p.style.transform = 'scaleX(1)';
+      p.style.opacity = '.35';
+    } else {
+      t.textContent = '';
+      p.style.transform = 'scaleX(0)';
+    }
   }
 
-  // ---------- wiring ----------
-  function seg(id, fn) {
-    $(id).addEventListener('click', e => {
-      const b = e.target.closest('button'); if (!b) return;
-      $(id).querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
-      fn(b.dataset.v);
+  function restart() { stopSprint(); setIdleTimer(); resetStats(); next(); }
+
+  // ---------- segmented controls ----------
+  function makeSeg(id, value, onChange) {
+    const root = $(id), btns = [...root.querySelectorAll('button')];
+    root.style.setProperty('--n', btns.length);
+    const set = (v, fire) => {
+      const i = Math.max(0, btns.findIndex(b => b.dataset.v == v));
+      btns.forEach((b, j) => { b.classList.toggle('on', j === i); b.setAttribute('aria-pressed', j === i); });
+      root.style.setProperty('--i', i);
+      if (fire) onChange(btns[i].dataset.v);
+    };
+    // select on press, not release — instant response
+    root.addEventListener('pointerdown', e => {
+      const b = e.target.closest('button');
+      if (!b) return;
+      e.preventDefault(); // don't steal focus, so Enter keeps answering
+      if (!b.classList.contains('on')) set(b.dataset.v, true);
     });
+    root.addEventListener('click', e => { // keyboard activation
+      const b = e.target.closest('button');
+      if (b && e.detail === 0 && !b.classList.contains('on')) set(b.dataset.v, true);
+    });
+    set(value, false);
+    requestAnimationFrame(() => requestAnimationFrame(() => root.classList.add('ready')));
+    return set;
   }
-  seg('opMode', v => { state.opMode = v; if (state.sprintTimer) stopSprint(); setIdleTimer(); resetStats(); next(); });
-  seg('runMode', v => { state.runMode = v; stopSprint(); setIdleTimer(); resetStats(); next(); });
-  seg('roseMode', v => { state.showRose = v === 'on'; $('rose').style.display = state.showRose ? '' : 'none'; });
 
-  $('pad').addEventListener('pointerdown', e => {
+  function applySettings() { save(); renderModeText(); restart(); }
+
+  makeSeg('runMode', settings.runMode, v => { settings.runMode = v; applySettings(); });
+  makeSeg('offMode', settings.offMode, v => { settings.offMode = v; showPanels(); applySettings(); });
+  makeSeg('rndMax', String(settings.rndMax), v => { settings.rndMax = +v; applySettings(); });
+  makeSeg('rndStep', String(settings.rndStep), v => { settings.rndStep = +v; applySettings(); });
+  makeSeg('opMode', settings.opMode, v => { settings.opMode = v; applySettings(); });
+
+  function showPanels() {
+    $('customPanel').classList.toggle('open', settings.offMode === 'custom');
+    $('randomPanel').classList.toggle('open', settings.offMode === 'random');
+  }
+
+  // custom offset stepper + chips
+  function setCustom(v, apply = true) {
+    settings.custom = clamp(Math.round(v), 1, 180);
+    $('customVal').textContent = settings.custom + '°';
+    document.querySelectorAll('#chips .chip').forEach(c => c.classList.toggle('on', +c.dataset.v === settings.custom));
+    if (apply) applySettings();
+  }
+  function holdRepeat(btn, fn) {
+    let t = 0;
+    const stop = () => { clearTimeout(t); btn.classList.remove('down'); };
+    btn.addEventListener('pointerdown', e => {
+      e.preventDefault(); btn.classList.add('down'); fn();
+      let delay = 400;
+      const loop = () => { t = setTimeout(() => { fn(); delay = Math.max(40, delay * 0.78); loop(); }, delay); };
+      loop();
+    });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => btn.addEventListener(ev, stop));
+    btn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(); } });
+  }
+  holdRepeat($('minusBtn'), () => setCustom(settings.custom - 1));
+  holdRepeat($('plusBtn'), () => setCustom(settings.custom + 1));
+  $('chips').addEventListener('pointerdown', e => {
+    const c = e.target.closest('.chip'); if (!c) return;
+    c.classList.add('down'); setCustom(+c.dataset.v);
+  });
+  $('chips').addEventListener('pointerup', e => { const c = e.target.closest('.chip'); if (c) c.classList.remove('down'); });
+  $('chips').addEventListener('pointerleave', () => document.querySelectorAll('.chip.down').forEach(c => c.classList.remove('down')));
+
+  // rose toggle
+  const roseToggle = $('roseToggle');
+  roseToggle.checked = settings.showRose;
+  const applyRose = () => $('roseWrap').classList.toggle('off', !settings.showRose);
+  roseToggle.addEventListener('change', () => { settings.showRose = roseToggle.checked; save(); applyRose(); });
+
+  $('reset').addEventListener('click', () => { restart(); closeSheet(); });
+
+  // ---------- bottom sheet: drag to dismiss, springs, interruptible ----------
+  const sheet = $('sheet'), scrim = $('scrim'), head = $('sheetHead');
+  let sheetY = null, sheetAnim = null, sheetOpen = false, drag = null;
+  const sheetH = () => sheet.offsetHeight + 16;
+  const rubber = (x, d, c = 0.55) => (x * d * c) / (d + c * x);
+  function setSheet(y) {
+    sheetY = y;
+    sheet.style.transform = `translate3d(0,${y}px,0)`;
+    scrim.style.opacity = clamp(1 - y / sheetH(), 0, 1);
+  }
+  function animateSheet(to, velocity = 0, damping = 1, done) {
+    if (sheetAnim) sheetAnim.stop();
+    sheetAnim = spring({ from: sheetY, to, velocity, damping, response: 0.38, eps: 0.5, onUpdate: setSheet, onDone: done });
+  }
+  function openSheet() {
+    if (sheetOpen) return;
+    sheetOpen = true;
+    sheet.style.visibility = 'visible';
+    scrim.style.pointerEvents = 'auto';
+    const v = sheetAnim ? sheetAnim.velocity : 0;   // interrupting a close? keep its momentum
+    if (!v) setSheet(sheetH());
+    animateSheet(0, v, 1);
+  }
+  function closeSheet(velocity = 0) {
+    if (!sheetOpen) return;
+    sheetOpen = false;
+    scrim.style.pointerEvents = 'none';
+    animateSheet(sheetH(), velocity, 1, () => { sheet.style.visibility = 'hidden'; });
+  }
+  $('openSettings').addEventListener('click', openSheet);
+  $('modeLink').addEventListener('click', openSheet);
+  $('closeSettings').addEventListener('click', () => closeSheet());
+  scrim.addEventListener('click', () => closeSheet());
+
+  head.addEventListener('pointerdown', e => {
+    if (e.target.closest('button')) return;
+    if (sheetAnim) sheetAnim.stop();
+    head.setPointerCapture(e.pointerId);
+    drag = { startY: e.clientY, base: Math.max(0, sheetY), hist: [{ y: e.clientY, t: e.timeStamp }] };
+  });
+  head.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const raw = drag.base + (e.clientY - drag.startY);
+    setSheet(raw < 0 ? -rubber(-raw, sheetH()) : raw);
+    drag.hist.push({ y: e.clientY, t: e.timeStamp });
+    if (drag.hist.length > 6) drag.hist.shift();
+  });
+  const endDrag = e => {
+    if (!drag) return;
+    const h = drag.hist, a = h[0], b = h[h.length - 1];
+    const v = b.t - a.t > 0 ? (b.y - a.y) / (b.t - a.t) * 1000 : 0;   // px/s
+    drag = null;
+    const projected = sheetY + (v / 1000) * 0.99 / (1 - 0.99);
+    const damping = Math.abs(v) > 400 ? 0.85 : 1;
+    if (projected > sheetH() * 0.45) closeSheet(v);
+    else { sheetOpen = true; animateSheet(0, v, damping); }
+  };
+  head.addEventListener('pointerup', endDrag);
+  head.addEventListener('pointercancel', endDrag);
+
+  // ---------- keypad ----------
+  const pad = $('pad');
+  const keyEl = k => pad.querySelector(`[data-k="${k}"]`);
+  pad.addEventListener('pointerdown', e => {
     const b = e.target.closest('button'); if (!b) return;
     e.preventDefault();
+    b.classList.add('down');
     press(b.dataset.k);
   });
-  document.addEventListener('keydown', e => {
-    if ($('overlay').classList.contains('show')) { if (e.key === 'Enter') $('ovAgain').click(); return; }
-    if (/^[0-9]$/.test(e.key)) press(e.key);
-    else if (e.key === 'Backspace') press('del');
-    else if (e.key === 'Enter') press('ok');
-  });
-  $('reset').addEventListener('click', () => { stopSprint(); setIdleTimer(); resetStats(); next(); });
-  $('ovAgain').addEventListener('click', () => {
-    $('overlay').classList.remove('show');
-    setIdleTimer(); resetStats(); next();
+  const lift = e => { const b = e.target.closest && e.target.closest('button'); if (b) b.classList.remove('down'); };
+  ['pointerup', 'pointercancel', 'pointerout'].forEach(ev => pad.addEventListener(ev, lift));
+  pad.addEventListener('click', e => { // keyboard (Tab + Space) activation
+    const b = e.target.closest('button'); if (b && e.detail === 0) press(b.dataset.k);
   });
 
+  document.addEventListener('keydown', e => {
+    if ($('result').classList.contains('show')) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('ovAgain').click(); } return; }
+    if (sheetOpen) { if (e.key === 'Escape') closeSheet(); return; }
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    let k = null;
+    if (/^[0-9]$/.test(e.key)) k = e.key;
+    else if (e.key === 'Backspace') k = 'del';
+    else if (e.key === 'Enter') k = 'ok';
+    else if (e.key === ',' || e.key === 's') { openSheet(); return; }
+    if (!k) return;
+    if (document.activeElement && document.activeElement.closest && document.activeElement.closest('.seg, .pad') && e.key === 'Enter') { e.preventDefault(); }
+    const el = keyEl(k);
+    if (el) { el.classList.add('down'); setTimeout(() => el.classList.remove('down'), 90); }
+    press(k);
+  });
+
+  $('ovAgain').addEventListener('click', () => {
+    $('result').classList.remove('show');
+    restart();
+  });
+
+  // ---------- go ----------
+  setCustom(settings.custom, false);
+  showPanels();
+  applyRose();
+  renderModeText();
   setIdleTimer();
   renderStats();
+  setRose(0);
   next();
 })();
 </script>
