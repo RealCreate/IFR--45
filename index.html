@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0d1117">
+<title>IFR ±45 Trainer</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --panel-2: #1f2630;
+    --line: #2d3540;
+    --text: #e6edf3;
+    --muted: #8b96a3;
+    --accent: #3fb6ff;
+    --good: #3fcf7a;
+    --bad: #ff5d5d;
+    --plus: #ffb347;
+    --minus: #b98cff;
+    --key: #202833;
+    --key-press: #2c3746;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #f3f5f8; --panel: #ffffff; --panel-2: #eef1f5; --line: #d6dce4;
+      --text: #111821; --muted: #5d6875; --accent: #0a7fd1; --good: #148a45;
+      --bad: #d33131; --plus: #c76a00; --minus: #7a45d6; --key: #e7ebf0; --key-press: #d4dbe4;
+    }
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    display: flex; justify-content: center;
+    padding: max(12px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+    user-select: none; -webkit-user-select: none; touch-action: manipulation;
+  }
+  .app { width: 100%; max-width: 520px; display: flex; flex-direction: column; gap: 12px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  h1 { font-size: 18px; margin: 0; letter-spacing: .02em; }
+  h1 span { color: var(--accent); }
+  .seg { display: flex; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 3px; }
+  .seg button {
+    border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 14px; font-weight: 600;
+    padding: 7px 11px; border-radius: 7px; cursor: pointer;
+  }
+  .seg button.on { background: var(--panel-2); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.25); }
+  .controls { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 6px; text-align: center; }
+  .stat b { display: block; font-size: 20px; font-variant-numeric: tabular-nums; }
+  .stat small { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
+    padding: 14px 16px 16px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+    transition: border-color .15s, box-shadow .15s; position: relative;
+  }
+  .card.good { border-color: var(--good); box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 25%, transparent); }
+  .card.bad { border-color: var(--bad); box-shadow: 0 0 0 3px color-mix(in srgb, var(--bad) 25%, transparent); }
+  .timer { position: absolute; top: 12px; right: 14px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .timer.hot { color: var(--bad); font-weight: 700; }
+
+  .rose { width: 150px; height: 150px; }
+  .q { display: flex; align-items: baseline; gap: 12px; font-variant-numeric: tabular-nums; }
+  .hdg { font-size: 64px; font-weight: 800; letter-spacing: .04em; line-height: 1; }
+  .op { font-size: 40px; font-weight: 800; line-height: 1; }
+  .op.plus { color: var(--plus); }
+  .op.minus { color: var(--minus); }
+  .hint { color: var(--muted); font-size: 13px; min-height: 18px; }
+
+  .answer {
+    display: flex; gap: 8px; margin-top: 4px;
+  }
+  .digit {
+    width: 56px; height: 64px; border-radius: 10px; background: var(--panel-2); border: 2px solid var(--line);
+    display: grid; place-items: center; font-size: 38px; font-weight: 800; font-variant-numeric: tabular-nums;
+  }
+  .digit.cur { border-color: var(--accent); }
+  .feedback { font-size: 15px; font-weight: 700; min-height: 20px; }
+  .feedback.good { color: var(--good); }
+  .feedback.bad { color: var(--bad); }
+
+  .pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .pad button {
+    height: 62px; border-radius: 12px; border: 1px solid var(--line); background: var(--key); color: var(--text);
+    font: inherit; font-size: 26px; font-weight: 700; cursor: pointer;
+  }
+  .pad button:active { background: var(--key-press); transform: scale(.98); }
+  .pad .fn { font-size: 18px; color: var(--muted); }
+  .pad .go { background: var(--accent); color: #fff; border-color: transparent; font-size: 20px; }
+
+  .footer { text-align: center; color: var(--muted); font-size: 12px; }
+  .footer button { background: none; border: 0; color: var(--accent); font: inherit; cursor: pointer; padding: 4px; }
+
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.55); display: none; align-items: center; justify-content: center; padding: 16px;
+  }
+  .overlay.show { display: flex; }
+  .sheet { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 22px; width: 100%; max-width: 360px; text-align: center; }
+  .sheet h2 { margin: 0 0 6px; font-size: 22px; }
+  .sheet .big { font-size: 54px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .sheet p { color: var(--muted); margin: 6px 0 16px; }
+  .sheet button { width: 100%; height: 50px; border-radius: 12px; border: 0; background: var(--accent); color: #fff; font: inherit; font-size: 17px; font-weight: 700; cursor: pointer; }
+
+  @media (max-height: 700px) {
+    .rose { width: 110px; height: 110px; }
+    .hdg { font-size: 52px; }
+    .pad button { height: 54px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>IFR <span>±45</span> Trainer</h1>
+    <div class="seg" id="runMode">
+      <button data-v="free" class="on">Free</button>
+      <button data-v="sprint">60 s sprint</button>
+    </div>
+  </header>
+
+  <div class="controls">
+    <div class="seg" id="opMode">
+      <button data-v="mix" class="on">Mixed</button>
+      <button data-v="plus">+45</button>
+      <button data-v="minus">−45</button>
+    </div>
+    <div class="seg" id="roseMode">
+      <button data-v="on" class="on">Compass</button>
+      <button data-v="off">Numbers only</button>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b id="sCorrect">0</b><small>Correct</small></div>
+    <div class="stat"><b id="sStreak">0</b><small>Streak</small></div>
+    <div class="stat"><b id="sAcc">–</b><small>Accuracy</small></div>
+    <div class="stat"><b id="sAvg">–</b><small>Avg time</small></div>
+  </div>
+
+  <div class="card" id="card">
+    <div class="timer" id="timer"></div>
+    <svg class="rose" id="rose" viewBox="-100 -100 200 200" aria-hidden="true">
+      <g id="roseCard"></g>
+      <g id="bugs"></g>
+      <path d="M0,-98 L-7,-84 L7,-84 Z" fill="var(--accent)"/>
+      <path d="M0,-12 L0,40 M-22,8 L22,8 M-9,32 L9,32" stroke="var(--text)" stroke-width="4" stroke-linecap="round" fill="none"/>
+    </svg>
+    <div class="q">
+      <div class="hdg" id="hdg">---</div>
+      <div class="op" id="op">+45</div>
+    </div>
+    <div class="answer">
+      <div class="digit" id="d0"></div>
+      <div class="digit" id="d1"></div>
+      <div class="digit" id="d2"></div>
+    </div>
+    <div class="feedback" id="fb"></div>
+  </div>
+
+  <div class="pad" id="pad">
+    <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+    <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
+    <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
+    <button data-k="del" class="fn">⌫</button><button data-k="0">0</button><button data-k="ok" class="go">Enter</button>
+  </div>
+
+  <div class="footer">
+    Type 3 digits (e.g. 045) — it checks automatically. 000 and 360 both count as north.
+    <br><button id="reset">Reset stats</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="sheet">
+    <h2>Time!</h2>
+    <div class="big" id="ovScore">0</div>
+    <p id="ovDetail"></p>
+    <button id="ovAgain">Go again</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const SPRINT_SECONDS = 60;
+
+  const state = {
+    opMode: 'mix', runMode: 'free', showRose: true,
+    hdg: 0, op: 1, ans: 0, input: '', t0: 0, locked: false,
+    correct: 0, wrong: 0, streak: 0, totalTime: 0,
+    sprintEnd: 0, sprintTimer: null, best: 0,
+  };
+  try { state.best = Number(localStorage.getItem('ifr45-best')) || 0; } catch (e) {}
+
+  const norm = x => { x = ((x % 360) + 360) % 360; return x === 0 ? 360 : x; };
+  const fmt = n => String(n).padStart(3, '0');
+
+  // ---------- compass rose ----------
+  const card = $('roseCard');
+  const ns = 'http://www.w3.org/2000/svg';
+  const el = (tag, attrs) => { const e = document.createElementNS(ns, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+  card.appendChild(el('circle', { r: 82, fill: 'var(--panel-2)', stroke: 'var(--line)', 'stroke-width': 2 }));
+  for (let d = 0; d < 360; d += 5) {
+    const long = d % 30 === 0, mid = d % 10 === 0;
+    const r1 = 82, r2 = long ? 70 : mid ? 74 : 78;
+    const a = d * Math.PI / 180;
+    card.appendChild(el('line', {
+      x1: r1 * Math.sin(a), y1: -r1 * Math.cos(a), x2: r2 * Math.sin(a), y2: -r2 * Math.cos(a),
+      stroke: 'var(--muted)', 'stroke-width': long ? 2.4 : 1.2,
+    }));
+    if (long) {
+      const lbl = { 0: 'N', 90: 'E', 180: 'S', 270: 'W' }[d] || String(d / 10);
+      const t = el('text', {
+        x: 0, y: -58, 'text-anchor': 'middle', 'dominant-baseline': 'middle',
+        'font-size': lbl.length > 1 || 'NESW'.includes(lbl) ? 13 : 12, 'font-weight': 700,
+        fill: 'NESW'.includes(lbl) ? 'var(--accent)' : 'var(--text)', transform: `rotate(${d})`,
+      });
+      t.textContent = lbl;
+      card.appendChild(t);
+    }
+  }
+  function bugAt(rel, color) {
+    // rel = degrees relative to lubber line (top)
+    const g = el('g', { transform: `rotate(${rel})` });
+    g.appendChild(el('path', { d: 'M-7,-84 L7,-84 L7,-74 L0,-79 L-7,-74 Z', fill: color }));
+    return g;
+  }
+  function drawRose(showBug) {
+    card.setAttribute('transform', `rotate(${-state.hdg})`);
+    const bugs = $('bugs'); bugs.innerHTML = '';
+    if (showBug) bugs.appendChild(bugAt(state.op * 45, state.op > 0 ? 'var(--plus)' : 'var(--minus)'));
+  }
+
+  // ---------- question flow ----------
+  function next() {
+    state.hdg = 1 + Math.floor(Math.random() * 360);
+    state.op = state.opMode === 'plus' ? 1 : state.opMode === 'minus' ? -1 : (Math.random() < .5 ? 1 : -1);
+    state.ans = norm(state.hdg + state.op * 45);
+    state.input = ''; state.locked = false;
+    $('hdg').textContent = fmt(state.hdg);
+    const op = $('op');
+    op.textContent = state.op > 0 ? '+45' : '−45';
+    op.className = 'op ' + (state.op > 0 ? 'plus' : 'minus');
+    $('card').className = 'card';
+    $('fb').textContent = ''; $('fb').className = 'feedback';
+    drawRose(false);
+    renderInput();
+    state.t0 = performance.now();
+  }
+
+  function renderInput() {
+    for (let i = 0; i < 3; i++) {
+      const d = $('d' + i);
+      d.textContent = state.input[i] || '';
+      d.classList.toggle('cur', i === state.input.length && !state.locked);
+    }
+  }
+
+  function submit() {
+    if (state.locked || state.input === '') return;
+    const v = parseInt(state.input, 10);
+    const ok = v === state.ans || (state.ans === 360 && v === 0);
+    const dt = (performance.now() - state.t0) / 1000;
+    state.locked = true;
+    drawRose(true);
+    const fb = $('fb');
+    if (ok) {
+      state.correct++; state.streak++; state.totalTime += dt;
+      $('card').className = 'card good';
+      fb.className = 'feedback good';
+      fb.textContent = `✓ ${dt.toFixed(1)} s`;
+      setTimeout(next, 450);
+    } else {
+      state.wrong++; state.streak = 0;
+      $('card').className = 'card bad';
+      fb.className = 'feedback bad';
+      fb.textContent = `✗ ${fmt(state.hdg)} ${state.op > 0 ? '+' : '−'} 45 = ${fmt(state.ans)}`;
+      setTimeout(next, 1600);
+    }
+    renderStats();
+  }
+
+  function press(k) {
+    if (state.runMode === 'sprint' && !state.sprintTimer) startSprint();
+    if (state.locked) return;
+    if (k === 'del') { state.input = state.input.slice(0, -1); renderInput(); return; }
+    if (k === 'ok') { submit(); return; }
+    if (state.input.length >= 3) return;
+    state.input += k;
+    renderInput();
+    if (state.input.length === 3) submit();
+  }
+
+  function renderStats() {
+    const total = state.correct + state.wrong;
+    $('sCorrect').textContent = state.correct;
+    $('sStreak').textContent = state.streak;
+    $('sAcc').textContent = total ? Math.round(100 * state.correct / total) + '%' : '–';
+    $('sAvg').textContent = state.correct ? (state.totalTime / state.correct).toFixed(1) + 's' : '–';
+  }
+
+  function resetStats() {
+    Object.assign(state, { correct: 0, wrong: 0, streak: 0, totalTime: 0 });
+    renderStats();
+  }
+
+  // ---------- sprint ----------
+  function startSprint() {
+    resetStats();
+    state.sprintEnd = performance.now() + SPRINT_SECONDS * 1000;
+    state.t0 = performance.now();
+    state.sprintTimer = setInterval(tick, 100);
+    tick();
+  }
+  function stopSprint() { clearInterval(state.sprintTimer); state.sprintTimer = null; }
+  function tick() {
+    const left = Math.max(0, (state.sprintEnd - performance.now()) / 1000);
+    const t = $('timer');
+    t.textContent = left.toFixed(left < 10 ? 1 : 0) + ' s';
+    t.classList.toggle('hot', left < 10);
+    if (left <= 0) endSprint();
+  }
+  function endSprint() {
+    stopSprint();
+    state.locked = true;
+    const total = state.correct + state.wrong;
+    const isBest = state.correct > state.best;
+    if (isBest) { state.best = state.correct; try { localStorage.setItem('ifr45-best', state.best); } catch (e) {} }
+    $('ovScore').textContent = state.correct;
+    $('ovDetail').textContent =
+      `${total ? Math.round(100 * state.correct / total) : 0}% accuracy · ` +
+      `${state.correct ? (state.totalTime / state.correct).toFixed(1) : '–'} s avg · ` +
+      (isBest ? 'new best!' : `best ${state.best}`);
+    $('overlay').classList.add('show');
+  }
+  function setIdleTimer() {
+    const t = $('timer');
+    t.classList.remove('hot');
+    t.textContent = state.runMode === 'sprint' ? `${SPRINT_SECONDS} s · type to start` : '';
+  }
+
+  // ---------- wiring ----------
+  function seg(id, fn) {
+    $(id).addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      $(id).querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+      fn(b.dataset.v);
+    });
+  }
+  seg('opMode', v => { state.opMode = v; if (state.sprintTimer) stopSprint(); setIdleTimer(); resetStats(); next(); });
+  seg('runMode', v => { state.runMode = v; stopSprint(); setIdleTimer(); resetStats(); next(); });
+  seg('roseMode', v => { state.showRose = v === 'on'; $('rose').style.display = state.showRose ? '' : 'none'; });
+
+  $('pad').addEventListener('pointerdown', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    e.preventDefault();
+    press(b.dataset.k);
+  });
+  document.addEventListener('keydown', e => {
+    if ($('overlay').classList.contains('show')) { if (e.key === 'Enter') $('ovAgain').click(); return; }
+    if (/^[0-9]$/.test(e.key)) press(e.key);
+    else if (e.key === 'Backspace') press('del');
+    else if (e.key === 'Enter') press('ok');
+  });
+  $('reset').addEventListener('click', () => { stopSprint(); setIdleTimer(); resetStats(); next(); });
+  $('ovAgain').addEventListener('click', () => {
+    $('overlay').classList.remove('show');
+    setIdleTimer(); resetStats(); next();
+  });
+
+  setIdleTimer();
+  renderStats();
+  next();
+})();
+</script>
+</body>
+</html>
